@@ -1,0 +1,742 @@
+﻿farm_id,shade_tree,height,location
+abena_a,Avocado ,11.01,Centre
+abena_a,Kakapenpen,6.66,N3
+abena_a,Yok,9.52,N4
+abena_a,Yok,7.76,N4
+abena_a,Yok,8.11,N4
+abena_a,Yok,14.9,N4
+abena_a,Yok,10.91,N4
+abena_a,Yok,12.99,N4
+abena_a,Akata,13.27,SW1
+abena_a,Oil Palm ,2.03,SW2
+abena_a,Plantain,1.91,SW2
+abena_a,Plantain,3.07,SW2
+abena_a,Plantain,3.99,SW2
+abena_a,Nyankyerene ,15.51,SW3
+abena_a,Nyankyerene ,16.25,SW3
+abena_a,Yok,13.55,SW4
+abena_a,Ofram,6.71,SW4
+abena_a,Plantain,5.05,SW4
+abena_a,Plantain,2.77,SW4
+abena_a,Papia ,31.91,SE2
+abena_a,Onyina,47.49,SE2
+abena_a,Cedrela,17.46,SE2
+abena_a,Ofram,9.91,SE2
+abena_a,Ofram,11.85,SE3
+abena_a,Apro,2.44,SE3
+abena_a,Yok,6.57,SE3
+abena_a,Plantain,1.68,SE4
+abena_a,Plantain,1.48,SE4
+abena_a,Plantain,3.44,SE4
+abena_a,Plantain,3.95,SE4
+abena_a,Plantain,1.43,SE4
+abena_a,Plantain,2.45,SE4
+abena_a,Plantain,2.76,SE4
+abena_a,Plantain,2.08,SE4
+abena_a,Plantain,2.91,SE4
+abena_a,Plantain,1.68,SE4
+abena_a,Plantain,2.95,SE4
+abena_a,Plantain,3.14,SE4
+abena_a,Plantain,3.43,SE4
+abena_a,Plantain,4.42,SE4
+abena_a,Plantain,2.53,SE4
+abena_a,Plantain,4.91,SE4
+abena_a,Plantain,3.89,SE4
+abena_a,Plantain,3.24,SE4
+abena_a,Plantain,2.978,SE4
+abena_a,Plantain,2.733,SE4
+abena_a,Plantain,2.989,SE4
+abena_a,Plantain,3.712,SE4
+abena_a,Plantain,2.823,SE4
+afia_a,Orange,4.799,N4
+afia_a,Orange,5.29,N4
+afia_a,Orange,5.98,N4
+afia_a,Konkroma,22.404,N4
+afia_a,Konkroma,7.34,SW2
+afia_a,Konkroma,3.9,SW2
+afia_a,Plantain ,1.76,SW3
+afia_a,Plantain ,3.62,SW4
+afia_a,Plantain ,3.54,SE2
+afia_a,Plantain ,3.258,SE2
+afia_a,Plantain ,2.6,SE2
+afia_a,Plantain ,2.2,SE2
+afia_a,Plantain,3.48,SE2
+afia_a,Kuakuanisno,13.78,SE4
+ama_a,Susumasa ,7.13,Centre
+ama_a,Susumasa ,9.24,Centre
+ama_a,Emire,10.25,N1
+ama_a,Konkroma,15.43,SW1
+ama_a,Oil Palm,7.46,SW2
+ama_a,Oil Palm,10.46,SW4
+ama_a,Oil Palm,4.18,SE1
+ama_a,Oil Palm,4.72,SE1
+ama_a,Oil Palm,4.28,SE1
+ama_a,Oil Palm,5.18,SE1
+ama_a,Oil Palm,5.7,SE1
+ama_a,Konkroma,7.91,SE3
+ama_a,Ofram,7,SE3
+ama_a,Susumasa,7.42,SE4
+amma_s,Plantain,1.17,N1
+amma_s,Plantain,0.84,N1
+amma_s,Plantain,0.5,N1
+amma_s,Plantain,0.93,N1
+amma_s,Plantain,1.49,N1
+amma_s,Plantain,1.824,N1
+amma_s,Plantain,4,N2
+amma_s,Banana,5.6,N3
+amma_s,Banana,6.906,N3
+amma_s,Banana,9.6,N3
+amma_s,Banana,3.06,N3
+amma_s,Banana,5.419,N3
+amma_s,Banana,3.38,N3
+amma_s,Banana,4,N3
+amma_s,Banana,3.152,N3
+amma_s,Kola,6.62,N4
+amma_s,Plantain,1.94,N4
+amma_s,Ofram,6.07,SW1
+amma_s,Plantain,2.97,SW2
+amma_s,Plantain,3.1,SW2
+amma_s,Plantain,1.51,SW2
+amma_s,Plantain,2.52,SW4
+amma_s,Plantain,3.93,SW4
+amma_s,Plantain,2.58,SW4
+amma_s,Papaya,2.08,SW4
+amma_s,Odum,2.82,SW4
+amma_s,Banana,4.35,SE1
+amma_s,Banana,1.72,SE1
+amma_s,Susumasa,24.38,SE2
+amma_s,Oil Palm ,6.04,SE3
+amma_s,Plantain,2.45,SE3
+amma_s,Esse,3.07,SE4
+amma_s,Susumasa,21.52,SE4
+amma_s,Odum,24.07,SE4
+amma_s,Konkroma,14.96,SE4
+anthony_a,Susumasa ,10.46,N3
+anthony_a,Susumasa ,10.05,N4
+anthony_a,Konkroma,17.93,SW1
+anthony_a,Susumasa ,12.56,SE1
+anthony_a,Susumasa ,14.57,SE4
+asepati_k,Konkroma,13.57,Centre
+asepati_k,Plantain,4.46,N1
+asepati_k,Konkroma,15.81,N2
+asepati_k,Konkroma,16.38,N3
+asepati_k,Edinam,17.55,N4
+asepati_k,Tamatama,29.76,N4
+asepati_k,Konkroma,18.53,SW2
+asepati_k,Ofram,16.77,SW3
+asepati_k,Odum,14.3,SW3
+asepati_k,Ofram,14.18,SW4
+asepati_k,Emire,39.49,SW4
+asepati_k,Ofram,11.63,SE2
+asepati_k,Konkroma,14.62,SE3
+asepati_k,Ofram,6.95,SE3
+asepati_k,Susumasa,12.46,SE3
+asepati_k,Ofram,12.14,SE4
+asepati_k,Ofram,12.47,SE4
+asepati_k,Ofram,14.16,SE4
+asepati_k,Ofram,15.95,SE4
+asepati_k,Ofram,6.74,SE4
+asepati_k,Ofram,16.01,SE4
+asepati_k,Ofram,10.95,SE4
+asepati_k,Ofram,8.65,SE4
+augustina_b,Papaya,4.09,N3
+augustina_b,Papaya,4.05,N3
+augustina_b,Konkroma,23.32,N4
+augustina_b,Papaya,2.59,SW1
+augustina_b,Papaya,4.01,SW1
+augustina_b,Papaya,1.26,SW1
+augustina_b,Papaya,1.54,SE3
+bashiru_l,Susumasa ,18,centre
+bashiru_l,Plantain,3.53,n1
+bashiru_l,Ofram,15.51,n3
+bashiru_l,Susumasa ,13.89,n4
+bashiru_l,Plantain,4,SW1
+bashiru_l,Plantain,4.36,sw4
+bashiru_l,Plantain,2.9,SE1
+bashiru_l,Susumasa ,12.44,se2
+charles_f,Papia,12.88,N1
+charles_f,Orange,7.153,N2
+charles_f,Kyenkyen,21.26,N2
+charles_f,Konkroma,11.152,N2
+charles_f,Ofram,15.149,N3
+charles_f,Konkroma,18.213,N3
+charles_f,Konkroma,14.822,N3
+charles_f,Konkroma,10.604,N4
+charles_f,Konkroma,12.386,N4
+charles_f,Plantain,3.263,N4
+charles_f,Kyenkyen,18.952,N4
+charles_f,Ofram,16.952,N4
+charles_f,Konkroma,12.615,N4
+charles_f,Sese,12.07,SW1
+charles_f,Konkroma,13.096,SW1
+charles_f,Konkroma,17.236,SW1
+charles_f,Akyee,14.344,SW1
+charles_f,Avocado,10.45,SW1
+charles_f,Odum,5.331,SW2
+charles_f,Plantain,1.86,SW2
+charles_f,Emire,25.64,SW3
+charles_f,Konkroma,16.49,SW4
+charles_f,Nyamedua,29.82,SW4
+charles_f,Konkroma,18.92,SE1
+charles_f,Konkroma,18.92,SE2
+charles_f,Okoro,16.44,SE2
+charles_f,Okoro,13.56,SE3
+charles_f,Susumasa,15.81,SE4
+daniel_a,Emire,18.898,Centre
+daniel_a,Konkroma,15.26,Centre
+daniel_a,Plantain,4.24,Centre
+daniel_a,Apro,12.63,N1
+daniel_a,Plantain,2.03,N1
+daniel_a,Plantain,3.64,N1
+daniel_a,Kyenkyen,23.14,N2
+daniel_a,Plantain,5.6,SW1
+daniel_a,Konkroma,15.26,SW1
+daniel_a,Ofram,10.24,SW2
+daniel_a,Konkroma,10.75,SW3
+daniel_a,Ofram,16.31,SE2
+daniel_a,Papia,25.24,SE3
+deborah_a,Konkroma,15.49,N1
+deborah_a,Konkroma,13.41,N1
+deborah_a,Konkroma,18.63,N2
+deborah_a,Susumasa ,15.58,N2
+deborah_a,Konkroma,19.07,N3
+deborah_a,Konkroma,13.39,N4
+deborah_a,Konkroma,16.11,N4
+deborah_a,Ofram,3.14,SW1
+deborah_a,Odum,12.37,SW1
+deborah_a,Konkroma,14.46,SW1
+deborah_a,Konkroma,17.7,SW2
+deborah_a,Susumasa,16,SW2
+deborah_a,Odum,16.98,SW3
+deborah_a,Susumasa,14.05,SW4
+deborah_a,Susumasa,16.82,SW4
+deborah_a,Susumasa ,16.5,SW4
+deborah_a,Konkroma,18.86,SW4
+deborah_a,Susumasa ,7.03,SE1
+deborah_a,Susumasa,14.09,SE1
+deborah_a,Konkroma,14.4,SE1
+deborah_a,Susumasa,13.35,SE1
+deborah_a,Konkroma,8.3,SE1
+deborah_a,Konkroma,14.53,SE1
+deborah_a,Oil Palm ,5.69,SE3
+deborah_a,Oil Palm ,7.08,SE3
+deborah_a,Mahogeny ,4.86,SE4
+deborah_a,Konkroma,14.58,SE4
+elisabeth_k,Oil Palm ,5.17,N1
+elisabeth_k,Oil Palm ,6.13,N1
+elisabeth_k,Yok,14.05,N4
+elisabeth_k,Coconut,41.69,N4
+elisabeth_k,Papaya,2.02,N4
+elisabeth_k,Papaya,1.76,N4
+elisabeth_k,Papaya,2.65,N4
+elisabeth_k,Papaya,2.98,N4
+elisabeth_k,Papaya,2.03,N4
+elisabeth_k,Papaya,1.987,N4
+elisabeth_k,Akata,3.56,N4
+elisabeth_k,Nyankyerene ,13.22,SW2
+elisabeth_k,Banana,2.94,SW2
+elisabeth_k,Banana,4.05,SW2
+elisabeth_k,Kuakuanisno,23.2,SW2
+elisabeth_k,Awiemfour Samena,5.09,SW2
+elisabeth_k,Oil Palm ,5.07,SW3
+elisabeth_k,Oil Palm ,3.96,SW3
+elisabeth_k,Ofram,7.44,SW4
+elisabeth_k,Orange,10.87,SW4
+elisabeth_k,Ofram,28.68,SW4
+elisabeth_k,Orange,7.14,SW4
+elisabeth_k,Banana,1.82,SE1
+elisabeth_k,Banana,5.84,SE1
+elisabeth_k,Banana,4.55,SE1
+elisabeth_k,Banana,6.55,SE1
+elisabeth_k,Oil Palm ,5.88,SE2
+elisabeth_k,Banana,3.07,SE2
+elisabeth_k,Banana,3.66,SE2
+elisabeth_k,Banana,2.59,SE2
+elisabeth_k,Banana,3.42,SE2
+elisabeth_k,Edinam,10.15,SE4
+elizabeth_a,Odum,7.295,Centre
+elizabeth_a,Kyenkyen,7.334,Centre
+elizabeth_a,Onyina,11.413,N1
+elizabeth_a,Konkroma,10.905,N1
+elizabeth_a,Susumasa,9.666,N1
+elizabeth_a,Nyankyerene ,15.49,N2
+elizabeth_a,Ofram,16.21,N2
+elizabeth_a,Konkroma,8.154,N2
+elizabeth_a,Susumasa,16.861,N2
+elizabeth_a,Okoro,13.459,SW1
+elizabeth_a,Plantain,5.833,SW2
+elizabeth_a,Plantain,4.966,SW2
+elizabeth_a,Plantain,5.153,SW2
+elizabeth_a,Plantain,4.698,SW2
+elizabeth_a,Plantain,4.769,SW2
+elizabeth_a,Odum,5.984,SW2
+elizabeth_a,Okoro,4.584,SW3
+elizabeth_a,Yok,9.414,SW3
+emmanuel_a1,Susumasa ,15.112,Centre
+emmanuel_a1,Yaya,28.197,Centre
+emmanuel_a1,Odum,20.025,Centre
+emmanuel_a1,Susumasa ,13.633,N1
+emmanuel_a1,Konkroma,22.451,N1
+emmanuel_a1,Susumasa,14.69,N3
+emmanuel_a1,Susumasa,7.75,N3
+emmanuel_a1,Konkroma,16.113,N3
+emmanuel_a1,Akata,22.479,N4
+emmanuel_a1,Yaya,15.615,N4
+emmanuel_a1,Fotom,12.484,SW1
+emmanuel_a1,Plantain,1.5,SW2
+emmanuel_a1,Ofram,5.793,SW2
+emmanuel_a1,Papaya,5.96,SW3
+emmanuel_a1,Papaya,6.44,SW3
+emmanuel_a1,Fotom,14.58,SE4
+emmanuel_a1,Papaya,10.18,SE4
+emmanuel_a1,Ofram,7.011,SE1
+emmanuel_a1,Plantain,4.49,SE1
+emmanuel_a1,Orange,7.5,SE2
+emmanuel_a1,Okoro,17.28,SE2
+emmanuel_a1,Papaya,7.02,SE2
+emmanuel_a1,Konkroma,15.58,SE4
+emmanuel_a1,Ofram,24.41,SE4
+faustina_a,Susumasa ,9.588,Centre
+faustina_a,Ofram,31.72,N1
+faustina_a,Oil Palm,4.548,N2
+faustina_a,Oil Palm,4.591,N2
+faustina_a,Konkroma,11.049,N2
+faustina_a,Avocado ,7.782,N3
+faustina_a,Oil Palm,3.314,N4
+faustina_a,Ofram,3.975,N4
+faustina_a,Ofram,28.8,SE1
+faustina_a,Ofram,25.12,SE2
+faustina_a,Oil Palm,4.512,SE3
+george_d,Ofram,20.368,Centre
+george_d,Ofram,21.492,Centre
+george_d,Ofram,24.612,Centre
+george_d,Ofram,17.703,Centre
+george_d,Odum,28.612,Centre
+george_d,Cedrela,18.56,N1
+george_d,Ofram,21.56,N1
+george_d,Ofram,21.844,N3
+george_d,Ofram,24.56,N3
+george_d,Awudifour kete,16.647,N3
+george_d,Sese,14.446,N3
+george_d,Ofram,16.72,N3
+george_d,Sese,8.464,N3
+george_d,Ofram,18.912,N4
+george_d,Ofram,16.093,SE2
+george_d,Apro,4.02,SE2
+george_d,Sese,15.689,SE3
+george_d,Susumasa ,5.798,SE3
+george_d,Susumasa,6.775,SE4
+george_d,Sese,16.23,SE4
+george_d,Tamatama,5.672,SE4
+george_d,Odum,16.737,SE1
+george_d,Trachilia genus ,5.327,SE1
+george_d,Emire,17.322,SE2
+george_d,Oil Palm,4.29,SE2
+george_d,Oil Palm,5.126,SE2
+george_d,Oil Palm,5.529,SE2
+george_d,Oil Palm,6.56,SE2
+george_d,Kuakuanisno,7.088,SE2
+george_d,Ofram,20.297,SE3
+george_d,Okoro,27.001,SE4
+george_d,Konkroma,23.691,SE4
+george_d,Okoro,26.52,SE4
+george_d,Okoro,28.56,SE4
+helena_a ,Susumasa ,12.19,N3
+helena_a ,Ofram,11.48,SW4
+helena_a ,Ofram,9.44,SE3
+helena_a ,Ofram,4.04,SE4
+james_o,Susumasa ,13.309,Centre
+james_o,Susumasa ,17.5,Centre
+james_o,Susumasa ,17.11,Centre
+james_o,Susumasa ,15.93,N1
+james_o,Susumasa ,10.45,N1
+james_o,Susumasa ,16.34,N2
+james_o,Susumasa ,17.59,N3
+james_o,Susumasa ,13.47,SW1
+james_o,Oil Palm,4.21,SW1
+james_o,Susumasa,18.82,SW3
+james_o,Susumasa,8.82,SE1
+james_o,Susumasa,15.84,SE4
+john_a,Plantain ,5.298,N1
+john_a,Maninua,16.193,N1
+john_a,Konkroma ,12.408,N3
+john_a,Konkroma,4.461,SW2
+john_a,Plantain,2.68,SW2
+john_a,Plantain,2.545,SW2
+john_a,Plantain,4.54,SW2
+john_a,Orange,10.411,SE1
+john_a,Orange,9.906,SE2
+juventus_d,Susumasa ,11.138,Centre
+juventus_d,Susumasa ,9.966,Centre
+juventus_d,Papaya,9.596,Centre
+juventus_d,Plantain,5.015,N1
+juventus_d,Plantain,5.873,N1
+juventus_d,Susumasa,17.956,N2
+juventus_d,Susumasa,6.594,N2
+juventus_d,Susumasa,11.101,N3
+juventus_d,Plantain,2.476,SW2
+juventus_d,Plantain,2.77,SW2
+juventus_d,Susumasa,9.345,SW4
+juventus_d,Susumasa,10.678,SE1
+juventus_d,Susumasa,18.06,SE3
+juventus_d,Kuakuanisno,21.11,SE3
+juventus_d,Plantain,2.98,SE4
+kofi_a,Susumasa ,8.66,N1
+kofi_a,Ofram,11.52,N4
+kofi_a,Konkroma,11.52,N4
+kofi_a,Plantain,4.03,SE1
+kofi_a,Susumasa,22.88,SE4
+kofi_t1,Konkroma,12.923,Centre
+kofi_t1,Susumasa ,14.941,Centre
+kofi_t1,Konkroma,17.95,Centre
+kofi_t1,Susumasa ,8.701,Centre
+kofi_t1,Konkroma,18.512,N1
+kofi_t1,Susumasa,11.54,N1
+kofi_t1,Konkroma,10.375,N2
+kofi_t1,Konkroma,12.25,N2
+kofi_t1,Susumasa,11.15,N3
+kofi_t1,Susumasa,9.99,N4
+kofi_t1,Susumasa,12.2,N4
+kofi_t1,Konkroma,19.81,SW3
+kofi_t1,Tamatama,24.24,SW3
+kofi_t1,Konkroma ,18.79,SW4
+kofi_t1,Konkroma,14.69,SE1
+kofi_t1,Susumasa ,12.32,SE2
+kofi_t1,Susumasa ,11.36,SE2
+kofi_t1,Susumasa ,9.51,SE2
+kofi_t1,Susumasa,12.87,SE3
+kofi_t1,Odum,15.82,SE3
+kofi_t1,Susumasa,11.59,SE4
+kwasi_m,Oil Palm,7.15,SW1
+kwasi_m,Konkroma ,10.71,SW4
+kwasi_m,Susumasa ,11.11,SE1
+kwasi_m,Susumasa ,12.49,SE2
+kwasi_m,Susumasa,13.98,SE2
+kwesi_b,Konkroma,21.464,Centre
+kwesi_b,Konkroma ,16.764,N1
+kwesi_b,Oil Palm,6.307,N2
+kwesi_b,Konkroma,17.607,N3
+kwesi_b,Susumasa,12.75,SW1
+kwesi_b,Konkroma,19.48,SW1
+kwesi_b,Esse,20.98,SW1
+kwesi_b,Meleta (genus),14.3,SW2
+kwesi_b,Konkroma ,17.11,SW2
+kwesi_b,Susumasa,11.35,SW3
+kwesi_b,Susumasa,12.26,SW4
+kwesi_b,Kyenkyen,14.38,SW4
+kwesi_b,Apro,6.63,SW4
+kwesi_b,Konkroma ,17.77,SE1
+kwesi_b,Okoro,18.08,SE1
+kwesi_b,Awudifour kete,17.55,SE1
+kwesi_b,Susumasa,11.65,SE1
+kwesi_b,Konkroma,17.95,SE2
+kwesi_b,Konkroma,14.6,SE3
+kwesi_b,Konkroma,22.92,SE4
+kwesi_b,Konkroma,15.01,SE4
+martin_e,Plantain,6.56,Centre
+martin_e,Plantain,6.787,Centre
+martin_e,Plantain,6.451,Centre
+martin_e,Plantain,3.809,Centre
+martin_e,Plantain,5.551,Centre
+martin_e,Plantain,4.983,Centre
+martin_e,Plantain,4.982,Centre
+martin_e,Konkroma,16.411,Centre
+martin_e,Konkroma,10.635,Centre
+martin_e,Konkroma,12.616,Centre
+martin_e,Papaya,7.08,N2
+martin_e,Kuakuanisno,28.82,N4
+martin_e,Susumasa,17.85,SW1
+martin_e,Plantain,5.38,SW1
+martin_e,Plantain,6.86,SW1
+martin_e,Plantain,3.34,SW1
+martin_e,Plantain,4.23,SW1
+martin_e,Konkroma,19.97,SW1
+martin_e,Konkroma,17.32,SW1
+martin_e,Susumasa,17.49,SW2
+martin_e,Susumasa,15.18,SW2
+martin_e,Konkroma,18.48,SW2
+martin_e,Konkroma,27.55,SW3
+martin_e,Esse,4.78,SW3
+martin_e,Konkroma,14.02,SW4
+martin_e,Susumasa,27.31,SW4
+martin_e,Susumasa,18.01,SE1
+martin_e,Sese,28.66,SE1
+martin_e,Konkroma,15.3,SE1
+martin_e,Tamatama,24.2,SE2
+martin_e,Susumasa,19.68,SE2
+martin_e,Ofram,2.34,SE3
+martin_e,Konkroma,7.18,SE4
+martin_e,Konkroma,19.61,SE4
+martin_e,Susumasa,11.4,SE4
+marvis_k,Guava,8.12,Centre
+marvis_k,Susumasa ,5.332,Centre
+marvis_k,Susumasa ,11.093,Centre
+marvis_k,Susumasa ,20.14,Centre
+marvis_k,Susumasa ,17.96,Centre
+marvis_k,Susumasa ,14.09,Centre
+marvis_k,Susumasa ,15.16,N1
+marvis_k,Susumasa ,15,N1
+marvis_k,Susumasa ,14,N1
+marvis_k,Susumasa ,16.52,N2
+marvis_k,Susumasa ,13.76,N2
+marvis_k,Susumasa ,13.02,N2
+marvis_k,Susumasa ,14.54,N2
+marvis_k,Susumasa ,12.29,N3
+marvis_k,Susumasa ,20.22,N3
+marvis_k,Susumasa ,13.72,N3
+marvis_k,Susumasa,15.13,N4
+marvis_k,Papaya ,4.54,N4
+marvis_k,Susumasa,15.01,SW1
+marvis_k,Susumasa,9.53,SW3
+marvis_k,Susumasa,12.23,SW3
+marvis_k,Susumasa,16.91,SW3
+marvis_k,Susumasa,13.14,SE1
+marvis_k,Susumasa,16.31,SE1
+marvis_k,Susumasa,15.44,SE2
+marvis_k,Susumasa,10.92,SE2
+marvis_k,Susumasa,13.75,SE3
+marvis_k,Susumasa,16.45,SE4
+marvis_k,Nyankyerene ,6.31,SE4
+michael_n1,Pepediawuo,5.68,Centre
+michael_n1,Awudifour kete,13.82,N1
+michael_n1,Orange,7.51,N2
+michael_n1,Konkroma,11.14,N3
+michael_n1,Konkroma,16.62,N3
+michael_n1,Pepediawuo,7.19,N4
+michael_n1,Ofram,19.33,N4
+michael_n1,Emire,6.54,SW1
+michael_n1,Ofram,18.73,SW1
+michael_n1,Konkroma,5.24,SW1
+michael_n1,Konkroma,14.96,SW2
+michael_n1,Ofram,8.94,SW3
+michael_n1,Plantain,3.49,SW3
+michael_n1,Odoma,5.89,SW3
+michael_n1,Odoma,7.12,SW3
+michael_n1,Konkroma,11.43,SW3
+michael_n1,Konkroma,13.63,SW4
+michael_n1,Plantain,4.01,SW4
+michael_n1,Papaya,8.64,SE1
+michael_n1,Kyenkyen,6.74,SE2
+michael_n1,Nyankyerene ,6.78,SE2
+michael_n1,Oil Palm,7.14,SE2
+michael_n1,Odoma,7.16,SE3
+michael_n1,Oil Palm,7.57,SE4
+michael_n1,Konkroma,6.36,SE4
+michael_n1,Odoma,5.13,SE4
+paul_n,Susumasa ,8.894,N1
+paul_n,Susumasa ,7.841,N2
+paul_n,Konkroma,10.195,N4
+paul_n,Akata,20.172,N4
+paul_n,Susumasa,15.07,SW1
+paul_n,Susumasa,9.262,SW2
+paul_n,Susumasa,16.173,SW4
+paul_n,Susumasa,13.994,SE2
+paul_n,Susumasa,19.905,SE3
+robert_ms,Banana,5.64,N3
+robert_ms,Konkroma ,9.8,SW1
+robert_ms,Ofram,5.4,SE2
+salifu_o,Susumasa ,9.98,Centre
+salifu_o,Susumasa ,11.59,Centre
+salifu_o,Susumasa ,14.41,N1
+salifu_o,Susumasa ,10.58,N3
+salifu_o,Susumasa,14.17,N3
+salifu_o,Papaya,6.92,N4
+salifu_o,Plantain,2.94,SW2
+salifu_o,Plantain,3.08,SW2
+salifu_o,Plantain,3.29,SW2
+salifu_o,Plantain,2.25,SW2
+salifu_o,Susumasa,15.07,SW2
+salifu_o,Susumasa,16.21,SW3
+salifu_o,Susumasa,15.59,SW3
+salifu_o,Susumasa,17.48,SW3
+salifu_o,Odum,5.34,SW4
+salifu_o,Susumasa ,11.32,SW4
+salifu_o,Susumasa,10.52,SW4
+salifu_o,Plantain,5.36,SW4
+salifu_o,Plantain,4.69,SW4
+salifu_o,Susumasa,8.2,SW4
+salifu_o,Konkroma,15.95,SE2
+salifu_o,Plantain,2.86,SE3
+salifu_o,Nyankyerene ,15.71,SE4
+salifu_o,Hannoa,26.49,SE4
+samuel_ko,Odum,20.37,Centre
+samuel_ko,Susumasa ,19.681,N1
+samuel_ko,Susumasa ,10.355,N2
+samuel_ko,Nyamedua ,17.335,N2
+samuel_ko,Orange ,8.463,N4
+samuel_ko,Sese,12.091,N4
+samuel_ko,Susumasa,10.154,SW1
+samuel_ko,Susumasa ,14.759,SW2
+samuel_ko,Orange,9.201,SW3
+samuel_ko,Orange,7.168,SW3
+samuel_ko,Susumasa,19.86,SW3
+samuel_ko,Susumasa,13.86,SW3
+samuel_ko,Susumasa,17.96,SW3
+samuel_ko,Orange,8.52,SE1
+samuel_ko,Susumasa,16.09,SE2
+samuel_ko,Fotom,17.67,SE3
+samuel_ko,Fotom,18.74,SE3
+samuel_ko,Orange,8.85,SE4
+samuel_o,Banana,5.32,Centre
+samuel_o,Banana,6.35,Centre
+samuel_o,Banana,5.31,Centre
+samuel_o,Banana,5.72,Centre
+samuel_o,Banana,3.75,Centre
+samuel_o,Mango,7.56,Centre
+samuel_o,Konkroma,8.62,N1
+samuel_o,Plantain,4.56,N1
+samuel_o,Plantain,2.81,N1
+samuel_o,Plantain,3.66,N1
+samuel_o,Plantain,4.2,N1
+samuel_o,Plantain,3.15,N2
+samuel_o,Plantain,1.55,N2
+samuel_o,Plantain,2.27,N2
+samuel_o,Plantain,1.03,N2
+samuel_o,Papaya,5.17,N2
+samuel_o,Yok,12.11,N3
+samuel_o,Edinam,31.42,N3
+samuel_o,Okoro,9.33,N4
+samuel_o,Papaya,2.78,SW1
+samuel_o,Papaya,3.44,SW1
+samuel_o,Mango,4.84,SW1
+samuel_o,Plantain,2.7,SW1
+samuel_o,Akata,12.27,SW1
+samuel_o,Banana,4.23,SW1
+samuel_o,Banana,2.83,SW1
+samuel_o,Banana,4.85,SW1
+samuel_o,Banana,6.42,SW1
+samuel_o,Banana,4.1,SW1
+samuel_o,Banana,4.96,SW1
+samuel_o,Banana,7.5,SW1
+samuel_o,Banana,8.1,SW1
+samuel_o,Banana,7.27,SW1
+samuel_o,Banana,1.74,SW1
+samuel_o,Asanfena,10.46,SW1
+samuel_o,Plantain,6.3,SW2
+samuel_o,Plantain,5.67,SW2
+samuel_o,Plantain,4.49,SW2
+samuel_o,Papaya,5.88,SW2
+samuel_o,Banana,5.7,SW3
+samuel_o,Banana,8.71,SW3
+samuel_o,Papaya,4.08,SW3
+samuel_o,Nyankyerene  ,16.27,SE1
+samuel_o,Kakapenpen,8.19,SE1
+samuel_o,Banana,3.82,SE1
+samuel_o,Banana,5.06,SE1
+samuel_o,Banana,4.01,SE1
+samuel_o,Banana,3.72,SE1
+samuel_o,Emire,28.4,SE2
+samuel_o,Oil Palm,4.6,SE2
+samuel_o,Banana,5.11,SE3
+samuel_o,Banana,2.56,SE3
+samuel_o,Banana,4.04,SE3
+samuel_o,Banana,3.53,SE3
+samuel_o,Banana,3.43,SE3
+samuel_o,Plantain,1.36,SE4
+samuel_o,Plantain,1.38,SE4
+samuel_o,Plantain,1.68,SE4
+samuel_o,Plantain,1.89,SE4
+samuel_o,Ofram,2.15,SE4
+samuel_o,Emire,2.83,SE4
+samuel_o,Apro,2.85,SE4
+stephen_o,Oil Palm,1.56,Centre 
+stephen_o,Emire,7.955,Centre 
+stephen_o,Oil Palm,2.404,N1
+stephen_o,Oil Palm,2.21,N1
+stephen_o,Emire,4.132,N1
+stephen_o,Emire,6.75,N1
+stephen_o,Emire,3.805,N1
+stephen_o,Emire,5.848,N1
+stephen_o,Emire,9.592,N2
+stephen_o,Emire,6.682,N2
+stephen_o,Emire,6.215,N2
+stephen_o,Emire,4.417,N2
+stephen_o,Plantain,4.49,N2
+stephen_o,Konkroma ,5.864,N2
+stephen_o,Konkroma,10.964,N2
+stephen_o,Nyankyerene ,8.199,N2
+stephen_o,Emire,3.866,N3
+stephen_o,Emire,4.427,N3
+stephen_o,Emire,3.82,N3
+stephen_o,Emire,4.62,N3
+stephen_o,Plantain,4.722,N3
+stephen_o,Emire,7.011,N3
+stephen_o,Oil Palm,2.215,N3 
+stephen_o,Oil Palm,2.56,N3
+stephen_o,Oil Palm,4.096,N3
+stephen_o,Oil Palm,3.282,N4
+stephen_o,Oil Palm,2.541,N4
+stephen_o,Oil Palm,3.289,N4
+stephen_o,Oil Palm,2.196,N4
+stephen_o,Oil Palm,3.951,N4
+stephen_o,Oil Palm,3.234,N4
+stephen_o,Emire,4.09,N4
+stephen_o,Emire,3.953,N4
+stephen_o,Kakapenpen,5.453,N4
+stephen_o,Apro,16.38,SW2
+stephen_o,Susumasa ,4.68,SE2
+stephen_o,Plantain,3.01,SE3
+stephen_o,Plantain,2.85,SE3
+stephen_o,Plantain,2.78,SE4
+stephen_o,Plantain,3.18,SE4
+stephen_o,Plantain,3.09,SE4
+stephen_o,Ofram,17.09,SE4
+william_o,Odum,20.465,Centre
+william_o,Susumasa ,14.53,N1
+william_o,Konkroma,15.546,N3
+william_o,Konkroma,21.715,N3
+william_o,Hannoa,26.931,N3
+william_o,Sese,14.611,N4
+william_o,Odum,17.91,SW1
+william_o,Wawa,19.19,SW1
+william_o,Emire,21.73,SW1
+william_o,Konkroma,14.38,SW3
+william_o,Emire,11.09,SW3
+william_o,Ofram,5.08,SE1
+william_o,Ofram,4.04,SE1
+william_o,Ofram,12.93,SE2
+william_o,Oil Palm,4.06,SE4
+william_t,Plantain ,3.167,N1
+william_t,Plantain ,2.784,N1
+william_t,Plantain ,3.036,N1
+william_t,Plantain ,2.487,N1
+william_t,Plantain ,2.553,N1
+william_t,Plantain ,3.085,N1
+william_t,Plantain ,3.38,N2
+william_t,Plantain ,4.331,N2
+william_t,Plantain ,1.3,N2
+william_t,Plantain ,3.542,N3
+william_t,Plantain ,2.289,SW1
+william_t,Plantain ,3.34,SW1
+william_t,Plantain ,4.288,SW1`
+william_t,Plantain ,4.503,SE3
+yaa_k,Oil Palm,6.22,Centre
+yaa_k,Konkroma,17.909,N1
+yaa_k,Kyenkyen,16.24,N4
+yaa_k,Okoro ,12.009,N4
+yaa_k,Papaya,3.44,SW2
+yaa_k,Papaya,5.44,SW2
+yaa_k,Papaya,8.12,SE3
+yaa_k,Nyamedua,18.53,SE4
+yaa_k,Nyamedua,23.77,SE4
+yaa_k,Okoro,21.05,SE4
+yaw_l ,Orange,7.843,Centre
+yaw_l ,Fotom,18.16,Centre
+yaw_l ,Orange,9.219,N1
+yaw_l ,Susumasa ,17.09,N3
+yaw_l ,Konkroma ,10.01,N4
+yaw_l ,Kotereamfo,16.392,SW3
+yaw_l ,Orange,10.916,SW4
+yaw_l ,Orange,9.902,SW4
+yaw_l ,Konkroma ,14.536,SE1
+yaw_l ,Konkroma,5.159,SE2
+yaw_l ,Susumasa,18.988,SE4
+yaw_o,Susumasa ,8.42,Centre
+yaw_o,Susumasa,10.232,Centre
+yaw_o,Konkroma ,11.822,N3
+yaw_o,Orange,9.599,SW1
+yaw_o,Yaya,11.301,SW1
+yaw_o,Avocado,6.905,SW3
+yaw_o,Plantain,6.5,SE1
+yaw_o,Akata,25.14,SE4
+yaw_o,Odum,26.44,SE4

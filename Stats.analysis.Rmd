@@ -1,0 +1,1695 @@
+---
+title: "4YP: Investigating bat diversity in Ghanian cocoa agroforestry"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-03-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load required packages 
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(vegan)
+library(car)
+library(lme4)
+library(lmerTest)
+library(DHARMa)
+library(glmmTMB)
+library(vegan)
+library(tidyr)
+library(ggpubr)
+library(broom.mixed)
+library(ggrepel)
+library(glmm.hp)
+library(stats)
+library(mlmtools)
+library(broom.mixed)
+library(patchwork)
+library(MuMIn)
+library(reshape2)
+library(RColorBrewer)
+library(Hmisc)
+```
+
+## **Bat Analysis**
+
+1.  Calculating sonotype metrics
+
+```{r}
+bat_data <- read.csv("bats.csv")
+
+# Remove leading/trailing spaces and tabs
+bat_data$sonotype <- trimws(bat_data$sonotype)
+
+# Total number of sonotypes 
+total_unique_sonotypes <- bat_data %>%
+  summarise(unique_sonotypes = n_distinct(sonotype))
+print(total_unique_sonotypes)
+
+# Group by farm and summarize metrics - richness, activity and shannon-index of diversity
+bat_metrics <- bat_data %>%
+  group_by(farm_id) %>%
+  summarise(
+    activity_bats = n(),  # Total bat passes (detections)
+    richness_bats = n_distinct(sonotype),  # Unique sonotypes (species richness)
+    shannon_diversity_bats = diversity(table(sonotype), index = "shannon")  # Shannon Index
+  )
+print(bat_metrics)
+
+# Save file 
+#write.csv(bat_metrics, "bat_metrics.csv", row.names = FALSE)
+```
+
+2.  Assemblage composition analysis using NMDS
+
+NMDS - shows multidimensional data in 2 dimensions by highlighting the similarities between samples of complex multidimensional data. The closer two points are on the plot, the more similar they are in terms of the species community
+
+```{r}
+# 1. Format sonotype data
+# Count the occurrences of each sonotype within each farm_id
+sonotype <- bat_data %>%
+  group_by(farm_id, sonotype) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Reshape the data to get sonotypes as columns
+sonotype_counts<- sonotype %>%
+  pivot_wider(names_from = sonotype, values_from = count, values_fill = list(count = 0))
+print(sonotype_counts)
+
+#write.csv(sonotype_counts, "sonotype_data.csv", row.names = FALSE)
+
+sonotype_counts <- read.csv("sonotype_data.csv")
+
+# 2. Calculating NMDS scores 
+# 2a. Make community matrix
+com = sonotype_counts[,8:ncol(sonotype_counts)]
+# Convert data in the matrix format 
+m_com = as.matrix(com)
+
+# 2b. Run metaMDS command to generate NMDS plot using Bray as distance measure, in 3 dimensions
+set.seed(123)
+nmds = metaMDS(m_com, distance = "bray", k=3)
+# Analysing how well the data is represented in three dimensions 
+stressplot(nmds)
+nmds$stress
+
+# 2c. Extract NMDS scores (X and Y coordinates)
+data.scores = as.data.frame(scores(nmds)$sites)
+# Add NMDS scores to all_metrics dataset 
+#all_metrics$NMDS1 <- data.scores$NMDS1
+
+```
+
+2.  Checking for normality in bat metrics
+
+```{r}
+hist(all_metrics$activity_bats)
+shapiro.test(all_metrics$activity_bats)
+
+hist(all_metrics$richness_bats)
+shapiro.test(all_metrics$richness_bats)
+
+hist(all_metrics$NMDS1)
+shapiro.test(all_metrics$NMDS1)
+```
+
+-   Both richness and NMDS1 of bats are normally distributed (Shapiro-Wilk= 0.125, 0.690)
+
+-   Bat activity is not normally distributed (Shapiro-Wilk=2.86e-07)
+
+## **Shade tree analysis**
+
+1.  Calculating shade tree metrics
+
+```{r}
+all_tree_data <- read.csv("all_trees.csv")
+
+# Remove leading/trailing spaces and tabs
+all_tree_data$shade_tree <- trimws(all_tree_data$shade_tree)
+
+# Exclude plantain and banana
+tree_data <- all_tree_data %>% 
+  filter(!(shade_tree %in% c("Banana", "Plantain")))
+
+#Save to csv
+#write.csv(tree_data, "tree_data.csv", row.names = FALSE)
+
+# Summarise key metrics - richness, abundance and shannon-index of diversity
+tree_metrics <- tree_data %>%
+  group_by(farm_id) %>%
+  summarise(
+    abundance_tree = n(),  # Total number of trees
+    richness_tree = n_distinct(shade_tree),  # Unique sonotypes (species richness)
+    shannon_diversity_tree = diversity(table(shade_tree), index = "shannon")  # Shannon Index
+  )
+print(tree_metrics)
+
+# ALL METRICS = data set of bat and tree metrics per farm combined
+all_metrics <- read.csv("all_metrics.csv")
+
+# Calculate shade trees per hectare
+#all_metrics$trees_per_hectare <- (all_metrics$abundance_tree / 1350) * 10000
+```
+
+2.  Standardising predictor variables
+
+```{r}
+# Scale predictor variables (shade tree variables)
+scaled_data <- all_metrics %>%
+  mutate(across(c(shade_cover, mean_height_transect, vertical_complexity, shannon_diversity_tree, tree_density_per_hectare, richness_tree), scale))
+
+```
+
+3.  Testing for collinearity between predictor variables
+
+```{r}
+# Classifying the predictor variables 
+predictors <- c("shade_cover", "mean_height_transect", "vertical_complexity", "shannon_diversity_tree", "tree_density_per_hectare")
+
+variable_names <-c("shade_cover" = "Shade Cover",
+  "mean_height_transect" = "Mean Tree Height",
+  "vertical_complexity" = "Vertical Complexity",
+  "shannon_diversity_tree" = "Shannon Tree Diversity",
+  "tree_density_per_hectare" = "Tree Density")
+
+# Spearman correlation matrix with p values 
+cor_matrix <- rcorr(as.matrix(scaled_data[predictors]), type = "spearman")
+```
+
+-   A correlation above 0.7 might indicate collinearity - richness_tree was highly correlated to shannon diversity (0.94) and tree density (0.76) so richness_tree removed as a predictor variable
+
+4.  Calculating summary statistics of shade tree data across farms
+
+```{r}
+shade_vars <- c("shade_cover", "mean_height_transect", "tree_density_per_hectare", 
+                "shannon_diversity_tree", "vertical_complexity")
+
+# Summary statistics function
+summary_stats <- function(x) {
+  c(
+    Mean = mean(x, na.rm = TRUE),
+    SD = sd(x, na.rm = TRUE),
+    Min = min(x, na.rm = TRUE),
+    Max = max(x, na.rm = TRUE)
+  )}
+
+summary_table <- t(sapply(all_metrics[shade_vars], summary_stats))
+summary_table <- as.data.frame(round(summary_table, 3))
+print(summary_table)
+```
+
+### Control variables
+
+```{r}
+#Distance to forest
+ggplot(all_metrics, aes(x=distance_forest, y=activity_bats))+
+  geom_point()
+cor.test(all_metrics$shannon_diversity_bats, all_metrics$distance_forest, method="spearman")
+
+# Village
+# Checking assumptions of normality and homogeneity of variances
+shapiro.test(resid(aov(activity_bats ~ village, data = all_metrics)))
+leveneTest(activity_bats ~ village, data = all_metrics)
+# Assumptions violated - use non parametric test 
+kruskal.test(activity_bats ~ village, data = all_metrics)
+# Plotting relationship
+ggplot(all_metrics, aes(x = village, y = activity_bats)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Bat Activity by Village",
+       x = "Village",
+       y = "Bat Activity") +
+  theme_minimal()
+```
+
+# **Fitting Models**
+
+## 1. Total bat assemblage
+
+### **Model 1 - Bat Activity**
+
+-   Count data so we use a poisson general linear mixed model (GLMM) using glmmTMB - designed for handling complex random effects and flexibility in modeling random effects
+
+```{r}
+# 1. Fit full model 
+glmm_bat_visits <- glmmTMB(activity_bats ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),  
+                          data = scaled_data,    
+                          family = poisson, 
+                          na.action = "na.fail")       
+summary(glmm_bat_visits)
+
+
+# 2a. Check model fit and residuals 
+sim_res_bat_visits <- simulateResiduals(fittedModel = glmm_bat_visits)
+testDispersion(sim_res_bat_visits)
+plotResiduals(sim_res_bat_visits)
+# Zero inflation
+testZeroInflation(sim_res_bat_visits)
+# Homescedasticity 
+testUniformity(sim_res_bat_visits)
+
+
+# 3a. Dredge function (using MuMIn package) to fit all possible model combinations with AIC values 
+model_set_visits <- dredge(glmm_bat_visits, rank="AICc")
+best_models_visits <- subset(model_set_visits, subset=delta < 2)
+as.data.frame(best_models_table)
+
+
+# 3b. Likelihood ratios and model selection 
+# Reduced model (remove insignificant variables that do not contribute to model fit)
+reduced_model_visits <- glmmTMB(activity_bats ~                             tree_density_per_hectare + mean_height_transect + shannon_diversity_tree +
+                        (1|distance_forest) +  (1|village), 
+                       data = scaled_data, family = poisson)
+summary(reduced_model_visits)
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_visits_nb, reduced_model_visits_nb, test = "Chisq")
+
+
+# 4. Hierarchical partitioning analysis - contribution of each predictor towards marginal r2
+glmm.hp_reduced_visits <- glmm.hp(reduced_model_visits)
+plot(glmm.hp_reduced_visits)
+```
+
+**Output of reduced best-fit model:**
+
+Significant Fixed effects:
+
+-   Tree density per hectare - positive effect (Z=3.264, p=0.001)
+-   Mean height - negative effect (Z=-1.773, p=0.076)
+-   Shannon diversity - negative effect (Z=-2.174, p=0.030)
+
+Hierarchical partitioning
+
+-   Tree density explained 53.78% of the variance
+
+-   Shannon diversity explained 25.87% of the variance
+
+-   Mean tree height explained 20.35% of the variance
+
+-   Poisson model suitable (no significant over dispersion or deviation in QQ plot, model not zero-inflated and residual variance is consistent)
+
+**Marginal effect and confidence interval:**
+
+```{r}
+# Calculating the marginal effect on bat activity of 10 extra shade trees
+sd_density <- sd(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+
+summary(reduced_model_visits)
+
+coef_10trees <- 0.5775 * (10/67.805)
+se_10trees <- 0.1769 * (10/67.805)
+
+lower_log <- coef_10trees - 1.96 * se_10trees
+upper_log <- coef_10trees + 1.96 * se_10trees
+
+estimate <- exp(coef_10trees)
+lower_ci <- exp(lower_log)
+upper_ci <- exp(upper_log)
+
+```
+
+Bat activity increased by 8.890% (95% CI: 3.462% - 14.603%) for every ten additional shade trees per hectare.
+
+### **Model 2 - Bat Richness**
+
+```{r}
+# 1. Fit full model 
+glmm_bat_richness <- glmmTMB(richness_bats ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                           (1|village) + (1|distance_forest), 
+                          data = scaled_data,    
+                          family = poisson,
+                          na.action="na.fail")  
+summary(glmm_bat_richness)
+
+# 2. Check model fit and residuals 
+# Simulating residuals
+sim_res_bat_richness <- simulateResiduals(fittedModel = glmm_bat_richness)
+testDispersion(sim_res_bat_richness)
+plot(sim_res_bat_richness)
+# Zero inflation
+testZeroInflation(sim_res_bat_richness)
+# Homescedasticity 
+testUniformity(sim_res_bat_richness)
+
+# 3a. Dredge function to fit all possible model combinations with AIC values 
+model_set_richness <- dredge(glmm_bat_richness, rank="AICc")
+best_models_richness <- get.models(model_set_richness, subset=delta < 2)
+as.data.frame(best_models_richness)
+
+# 3b. Likelihood ratios and model selection 
+# Reduced model (remove insignificant variables that do not contribute to model fit)
+reduced_model_richness1 <- glmmTMB(richness_bats ~ tree_density_per_hectare  + 
+                                  (1|distance_forest) + (1|village),
+                       data = scaled_data, family = poisson, na.action="na.fail")
+summary(reduced_model_richness1)
+
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_richness, reduced_model_richness1, test = "Chisq")
+```
+
+**Output of reduced best-fit model:**
+
+-   Tree density per hectare - positive effect (estimate=0.1649, p = 0.0375)
+-   Poisson model suitable (no significant over dispersion or deviation in QQ plot, model not zero-inflated and residual variance is consistent)
+
+### Model 3: Assemblage composition
+
+```{r}
+# 1. Generate model 
+glmm_bat_nmds <- glmmTMB(NMDS1 ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),
+                          data = scaled_data,     
+                          family = gaussian,
+                          na.action="na.fail")       # Poisson distribution for count data
+summary(glmm_bat_nmds)
+
+# 2. Check model fit 
+# Simulating residuals
+sim_res_bat_nmds <- simulateResiduals(fittedModel = glmm_bat_nmds)
+testDispersion(sim_res_bat_nmds)
+plot(sim_res_bat_nmds)
+# Zero inflation
+testZeroInflation(sim_res_bat_nmds)
+# Homescedasticity 
+testUniformity(sim_res_bat_nmds)
+
+# 3a. Dredge function to fit all possible model combinations with AIC values 
+model_set_nmds <- dredge(glmm_bat_nmds, rank="AICc")
+best_models_nmds <- subset(model_set_nmds, subset=delta <2)
+as.data.frame(best_models_nmds)
+
+# 3. Likelihood ratio tests to determine best model
+reduced_model_nmds <- glmmTMB(NMDS1 ~  mean_height_transect  +   +
+                        (1|distance_forest) +  (1|village), 
+                       data = scaled_data, family = gaussian)
+summary(reduced_model_nmds)
+
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_nmds, reduced_model_nmds, test = "Chisq")
+
+# 4. Hierarchical partitioning 
+glmm.hp_reduced_nmds <- glmm.hp(reduced_model_nmds)
+plot(glmm.hp_reduced_nmds)
+```
+
+**Output of reduced best-fit model**
+
+-   Mean height - negative effect (Z=-2.078, p=0.038)
+
+-   Poisson model suitable (no significant over dispersion or deviation in QQ plot, model not zero-inflated and residual variance is consistent)
+
+## 2. Ensemble level analysis
+
+Sonotypes have been split into open, edge and clutter guilds according to Denzinger and Schnitzler (2013)
+
+```{r}
+# Assigning guilds to sonotypes 
+guild_list <- c("QCF_10_19_MO" = "Open", 
+                "QCF_20_29_M" = "Open", 
+                "QCF_20_29_E" = "Open", 
+                "QCF_FM_20_30_M" = "Open",
+                "QCF_30_40_M" = "Open",
+                "QCF_30_40_E" = "Open", 
+                "FMQCF_40_44_V" = "Edge", 
+                "FMQCF_50_59_V" = "Edge",
+                "FMQCF_60_69_V" = "Clutter",
+                "FM_20_40_V" = "Open",
+                "FM_40_45_VM" = "Edge",
+                "FM_45_60_V" = "Clutter",
+                "FM_60_90_V" = "Clutter",
+                "CF_FM_45_60_H" = "Edge",
+                "CF_FM_61_70_H" = "Edge",
+                "FM_CF_61_70_R" = "Clutter",
+                "CF_FM_90_110_H" = "Clutter",
+                "CF_FM_110_130_H" = "Clutter",
+                "CF_FM_130_140_H" = "Clutter",
+                "FM_25_50_N" = "Edge",
+                "FM_51_75_N" = "Edge",
+                "QFM_25_35_R" = "Open")
+
+# Adding guilds to sonotype results 
+bats <- read.csv("bats.csv")
+bats$guild <- guild_list[bats$sonotype]
+
+# Calcualte sonotype activity by guild and farm
+guild_activity <- bats %>%
+  group_by(farm_id, guild) %>%
+  summarise(total_activity = n(), .groups = 'drop') %>%
+  pivot_wider(names_from = guild, values_from = total_activity, values_fill = list(total_activity = 0))
+```
+
+### Model 4: Activity of open-space bats
+
+```{r}
+# 1. Generate model 
+glmm_bat_visits_open <- glmmTMB(activity_open ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),
+                          data = scaled_data,     
+                          family = poisson,
+                          na.action="na.fail")  
+summary(glmm_bat_visits_open)
+
+# 2. Check model fit 
+# Simulating residuals
+sim_res_bat_visits_open <- simulateResiduals(fittedModel = glmm_bat_visits_open)
+testDispersion(sim_res_bat_visits_open)
+plot(sim_res_bat_visits_open)
+# Zero inflation
+testZeroInflation(sim_res_bat_visits_open)
+# Homescedasticity 
+testUniformity(sim_res_bat_visits_open)
+
+# 3a. Dredge function to fit all possible model combinations with AIC values 
+model_set_open <- dredge(glmm_bat_visits_open, rank="AICc")
+best_models_open <- get.models(model_set_open, subset=delta <2)
+as.data.frame(best_models_open)
+
+# 3. Likelihood ratio tests to determine best model
+reduced_model_visits_open <- glmmTMB(activity_open ~                             tree_density_per_hectare   +  shannon_diversity_tree +
+                        (1|distance_forest) +  (1|village), 
+                       data = scaled_data, family = poisson,
+                       na.action="na.fail")
+summary(reduced_model_visits_open)
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_visits_open, reduced_model_visits_open, test = "Chisq")
+
+# 4. Hierarchical partitioning 
+glmm.hp_reduced_visits_open <- glmm.hp(reduced_model_visits_open)
+plot(glmm.hp_reduced_visits_open)
+```
+
+**Output of reduced best-fit model**
+
+-   Tree density significantly increases open bat activity (Z=2.2643, p=0.008)
+
+-   Shannon diversity has a significant negative effect on open bat activity
+
+-   Poisson model suitable (no significant over dispersion or deviation in QQ plot, model not zero-inflated and residual variance is consistent)
+
+### Model 5: Activity of Edge-space bats
+
+```{r}
+# 1. Generate model 
+glmm_bat_visits_edge <- glmmTMB(activity_edge ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),
+                          data = scaled_data,     
+                          family = poisson,
+                          na.action="na.fail")       # Poisson distribution for count data
+summary(glmm_bat_visits_edge)
+
+# 2. Check model fit 
+# Simulating residuals
+sim_res_bat_visits_edge <- simulateResiduals(fittedModel = glmm_bat_visits_edge)
+testDispersion(sim_res_bat_visits_edge)
+plot(sim_res_bat_visits_edge)
+# Zero inflation
+testZeroInflation(sim_res_bat_visits_edge)
+# Homescedasticity 
+testUniformity(sim_res_bat_visits_edge)
+
+# 3a. Dredge function to fit all possible model combinations with AIC values 
+model_set_edge <- dredge(glmm_bat_visits_edge, rank="AICc")
+best_models_edge <- get.models(model_set_edge, subset=delta <2)
+as.data.frame(best_models_edge)
+
+# 3. Likelihood ratio tests to determine best model
+reduced_model_visits_edge <- glmmTMB(activity_edge ~                             tree_density_per_hectare   +  vertical_complexity +
+                        (1|distance_forest) +  (1|village), 
+                       data = scaled_data, family = poisson)
+summary(reduced_model_visits_edge)
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_visits_edge, reduced_model_visits_edge, test = "Chisq")
+
+# 4. Hierarchical partitioning 
+glmm.hp_reduced_visits_edge <- glmm.hp(reduced_model_visits_edge)
+plot(glmm.hp_reduced_visits_edge)
+```
+
+-   No significant model issues detected.
+
+-   Tree density significantly increases edge bat activity (P=0.035)
+
+### Model 6: Activity of Clutter space bats
+
+```{r}
+# 1a. Generate poisson model 
+glmm_bat_visits_clutter <- glmmTMB(activity_clutter ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),
+                          data = scaled_data,     
+                          family = poisson,
+                          na.action="na.fail")       # Poisson distribution for count data
+summary(glmm_bat_visits_clutter)
+
+# 1b. Generate negative binomial model 
+glmm_bat_visits_clutter_nb <- glmmTMB(activity_clutter ~ shade_cover + mean_height_transect + vertical_complexity +
+                          shannon_diversity_tree + tree_density_per_hectare +
+                          + (1|village) + (1|distance_forest),
+                          data = scaled_data,     
+                          family = nbinom2,
+                          na.action="na.fail")       # Poisson distribution for count data
+summary(glmm_bat_visits_clutter_nb)
+
+# 2. Check model fit 
+# Simulating residuals
+sim_res_bat_visits_clutter <- simulateResiduals(fittedModel = glmm_bat_visits_clutter)
+testDispersion(sim_res_bat_visits_clutter)
+plot(sim_res_bat_visits_clutter)
+# Zero inflation
+testZeroInflation(sim_res_bat_visits_clutter)
+# Homescedasticity 
+testUniformity(sim_res_bat_visits_clutter)
+# CHECK MODEL FIT OF BINOMIAL
+# Simulating residuals
+sim_res_bat_visits_clutter_nb <- simulateResiduals(fittedModel = glmm_bat_visits_clutter_nb)
+testDispersion(sim_res_bat_visits_clutter_nb)
+plot(sim_res_bat_visits_clutter_nb)
+# Zero inflation
+testZeroInflation(sim_res_bat_visits_clutter_nb)
+# Homescedasticity 
+testUniformity(sim_res_bat_visits_clutter_nb)
+
+# 3a. Dredge function to fit all possible model combinations with AIC values 
+model_set_clutter <- dredge(glmm_bat_visits_clutter_nb, rank="AICc")
+best_models_clutter <- get.models(model_set_clutter, subset=delta <2)
+as.data.frame(best_models_clutter)
+
+# 3. Likelihood ratio tests to determine best model
+reduced_model_visits_clutter <- glmmTMB(activity_clutter ~  
+                        (1|distance_forest) +  (1|village/farm_id), 
+                       data = scaled_data, family = poisson)
+summary(reduced_model_visits_clutter)
+# Compare the two models using LRT (Likelihood Ratio Test)
+anova(glmm_bat_visits_clutter, reduced_model_visits_clutter, test = "Chisq")
+
+# 4. Hierarchical partitioning 
+glmm.hp_reduced_visits_clutter <- glmm.hp(reduced_model_visits_clutter)
+plot(glmm.hp_reduced_visits_clutter)
+```
+
+-   Negative binomial model best
+
+-   Best fit model is NULL model
+
+# Figures
+
+### 1. Shade tree variables
+
+1a. Correlation heat map
+
+```{r}
+# Figure: Correlation heatmap of shade tree variables 
+cor_matrix[upper.tri(cor_matrix)] <- NA
+# Convert to long format
+cor_df <- melt(cor_matrix, varnames = c("Var1", "Var2"), value.name = "Correlation", na.rm = TRUE) 
+# Plot
+cor_matrix_figure <- ggplot(cor_df, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile(color = "white", width = 0.95, height = 0.95) +
+  geom_text(aes(label = round(Correlation, 3)), color = "black", size = 4) +
+  scale_fill_gradient2(
+    low = "#0072B2", mid = "white", high = "#ca0020",
+    midpoint = 0.5, limits = c(0, 1),
+    name = "Spearman\nCorrelation"
+  ) +
+  scale_x_discrete(
+    position = "bottom",
+    labels = c(
+      "shade_cover" = "Shade Cover",
+      "mean_height_transect" = "Height",
+      "vertical_complexity" = "Vertical Complexity",
+      "shannon_diversity_tree" = "Shannon Diversity",
+      "tree_density_per_hectare" = "Density"
+    )) +
+  scale_y_discrete(
+    position = "right",
+    labels = c(
+      "shade_cover" = "Shade Cover",
+      "mean_height_transect" = "Height",
+      "vertical_complexity" = "Vertical Complexity",
+      "shannon_diversity_tree" = "Shannon Diversity",
+      "tree_density_per_hectare" = "Density"
+    )) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    legend.position = "right",
+    legend.spacing = unit(1, "lines"),
+  legend.title = element_text(margin = margin(b = 15)))+
+  coord_fixed()
+
+ggsave("cor_matrix_figure.png", plot = cor_matrix_figure, width = 8, height = 6, units = "in", dpi = 300)
+```
+
+### 2. Model output figure
+
+```{r}
+# 1. OVERALL BAT ACTIVITY
+# Extracting model results 
+model_results_activity <- broom.mixed::tidy(reduced_model_visits, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_activity <- model_results_activity %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative")) 
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_activity <- ggplot(model_results_activity, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) + 
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey60", size = 1) +  # Black zero line
+  scale_color_manual(values = c("Positive" = "deepskyblue2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) +  
+  scale_x_discrete(labels = c(
+    "tree_density_per_hectare" = "Shade\ntree\ndensity",
+    "shannon_diversity_tree" = "Shannon\ndiversity", 
+    "mean_height_transect" = "Shade\ntree\nheight"
+  )) +  
+  coord_flip() +  
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none",  
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  # Add border
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+
+# 2. OVERALL BAT RICHNESS 
+# Extracting model results 
+model_results_richness <- broom.mixed::tidy(reduced_model_richness1, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_richness <- model_results_richness %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative"))
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_richness <- ggplot(model_results_richness, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) +  
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  
+  scale_color_manual(values = c("Positive" = "#0072B2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) +  
+  scale_x_discrete(labels = c(
+    "tree_density_per_hectare" = "Shade\ntree\ndensity",
+    "mean_height_transect" = "Shade\ntree\nheight",
+    "shade_cover" = "Shade\nCover"
+  )) +  
+  coord_flip() + 
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none",  
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+# 3b. OVERALL BAT ASSEMBLAGE
+# Extracting model results 
+model_results_nmds <- broom.mixed::tidy(reduced_model_nmds, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_nmds <- model_results_nmds %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative")) # Assign colors
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_nmds <- ggplot(model_results_nmds, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) +  
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey60", size = 1) + 
+  scale_color_manual(values = c("Positive" = "#0072B2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) +  # Assign colors
+  scale_x_discrete(labels = c(
+    "tree_density_per_hectare" = "Shade\ntree\ndensity",
+    "shannon_diversity_tree" = "Shannon\ndiversity", 
+    "mean_height_transect" = "Shade\ntree\nheight"
+  )) +  # Rename terms directly in ggplot
+  coord_flip() +  # Flip coordinates
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none",  # Remove legend
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+# 4. OPEN BAT ACTIVITY
+# Extracting model results 
+model_results_open <- broom.mixed::tidy(reduced_model_visits_open, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_open <- model_results_open %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative"))  
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_open <- ggplot(model_results_open, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) +  
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  
+  scale_color_manual(values = c("Positive" = "#0072B2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) +  
+  scale_x_discrete(labels = c(
+    "shannon_diversity_tree" = "Shannon\ndiversity",
+    "tree_density_per_hectare" = "Shade\ntree\ndensity"
+  )) +  # Rename terms directly in ggplot
+  coord_flip() +  
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none",  
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+
+# 5. EDGE BAT ACTIVITY
+# Extracting model results 
+model_results_edge <- broom.mixed::tidy(reduced_model_visits_edge, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_edge <- model_results_edge %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative"))
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_edge <- ggplot(model_results_edge, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) +  
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  
+  scale_color_manual(values = c("Positive" = "#0072B2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) +  # Assign colors
+  scale_x_discrete(labels = c(
+    "vertical_complexity" = "Vertical\ncomplexity",
+    "tree_density_per_hectare" = "Shade\ntree\ndensity"
+  )) +  # Rename terms directly in ggplot
+  coord_flip() + 
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none",  
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+
+# 6. CLUTTER BAT ACTIVITY  - NULL model is best, don't include 
+# Extracting model results 
+model_results_clutter <- broom.mixed::tidy(reduced_model_visits_clutter, effects = "fixed")
+# Compute confidence intervals (assuming normal approximation)
+model_results_clutter <- model_results_clutter %>%
+  mutate(
+    Lower = estimate - 1.96 * std.error,
+    Upper = estimate + 1.96 * std.error,
+    Color = ifelse(p.value > 0.05, "Not Significant", 
+                   ifelse(estimate > 0, "Positive", "Negative")) 
+  ) %>%
+  filter(term != "(Intercept)")  
+
+# Create forest plot
+overall_clutter <- ggplot(model_results_clutter, aes(x = term, y = estimate, ymin = Lower, ymax = Upper, color = Color)) +
+  geom_pointrange(shape = 17, size = 1) +  
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  
+  scale_color_manual(values = c("Positive" = "#0072B2", "Negative" = "#ca0020", "Not Significant" = "darkslategray")) + 
+  scale_x_discrete(labels = c(
+    "mean_height_transect" = "Vertical\ncomplexity",
+    "shade_cover" = "Shade\ncover"
+  )) +  # Rename terms directly in ggplot
+  coord_flip() +  # Flip coordinates
+  labs(x=NULL, y=NULL)+
+  theme_minimal() +
+  theme(
+    legend.position = "none", 
+    panel.border = element_rect(color = "darkslategray", fill = NA, linewidth = 1),  
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    aspect.ratio = 1 
+  ) 
+
+ggsave("overallactivity.png", plot = overall_activity, width = 3.1, height = 3.1, units = "in", dpi = 300)
+ggsave("overallrichness.png", plot = overall_richness, width = 3, height = 3, units = "in", dpi = 300)
+ggsave("overallnmds.png", plot = overall_nmds, width = 3.2, height = 3.1, units = "in", dpi = 300)
+ggsave("overallopen.png", plot = overall_open, width = 3.1, height = 3.1, units = "in", dpi = 300)
+ggsave("overalledge.png", plot = overall_edge, width = 3.2, height = 3.1, units = "in", dpi = 300)
+```
+
+### 3. Figure of correlation results
+
+1.  **Correlation of variables**
+
+Checking for normality of variables
+
+```{r}
+# Plotting all environmental variables by diversity
+# Testing for normality - environmental variables 
+shapiro.test(all_metrics$shade_cover)
+shapiro.test(all_metrics$tree_density_per_hectare)
+shapiro.test(all_metrics$mean_height_transect)
+shapiro.test(all_metrics$vertical_complexity)
+shapiro.test(all_metrics$shannon_diversity_tree)
+# Testing for normality - bat variables 
+shapiro.test(all_metrics$activity_bats)
+shapiro.test(all_metrics$richness_bats)
+shapiro.test(all_metrics$NMDS1)
+```
+
+-   Normally distributed = Tree density, vertical complexity, shannon diversity, bat richness, bat NMDS1
+
+-   Non normally distributed = Shade cover, tree height, bat activity
+
+2.  **Figure for bat activity**
+
+```{r}
+# TREE DENSITY PLUS MODEL OUTPUT 
+# Extract means and sds from unscaled data
+td_mean <- mean(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+td_sd <- sd(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+mh_mean <- mean(all_metrics$mean_height_transect, na.rm = TRUE)
+mh_sd <- sd(all_metrics$mean_height_transect, na.rm = TRUE)
+sh_mean <- mean(all_metrics$shannon_diversity_tree, na.rm = TRUE)
+sh_sd <- sd(all_metrics$shannon_diversity_tree, na.rm = TRUE)
+# Sequence of real (unscaled) tree density values for plotting
+td_seq <- seq(min(all_metrics$tree_density_per_hectare, na.rm = TRUE),
+              max(all_metrics$tree_density_per_hectare, na.rm = TRUE), length.out = 100)
+
+# TREE DENSITY PLOT 
+# Create a new data frame for predictions
+new_df <- data.frame(
+  tree_density_per_hectare = td_seq,
+  mean_height_transect = mh_mean,  # fixed at mean
+  shannon_diversity_tree = sh_mean)  # fixed at mean
+# Scale values to match model input
+new_df_scaled <- data.frame(
+  tree_density_per_hectare = (td_seq - td_mean) / td_sd,
+  mean_height_transect = (mh_mean - mh_mean) / mh_sd,  # = 0
+  shannon_diversity_tree = (sh_mean - sh_mean) / sh_sd)  # = 0
+# Predict on link scale (log), ignoring random effects
+pred <- predict(reduced_model_visits, newdata = new_df_scaled, type = "link", se.fit = TRUE, re.form = NA)
+# Add back-transformed predictions to unscaled data frame
+new_df$fit <- exp(pred$fit)
+new_df$lower <- exp(pred$fit - 1.96 * pred$se.fit)
+new_df$upper <- exp(pred$fit + 1.96 * pred$se.fit)
+td_activity_model <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = activity_bats)) +
+  geom_ribbon(
+    data = new_df,
+    aes(x = tree_density_per_hectare, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) + # Prediction line
+  geom_line(
+    data = new_df,
+    aes(x = tree_density_per_hectare, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+    geom_point(alpha = 0.7, size = 1.5, color = "grey40") +
+  theme_classic() +
+  labs(x=NULL, y=NULL)+
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  ) 
+
+# VERTICAL COMPLEXITY
+cor_comp <- ggplot(all_metrics, aes(x = vertical_complexity, y = activity_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "grey40") + 
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+# Correlation
+cor.test(all_metrics$vertical_complexity, all_metrics$activity_bats, method="spearman")
+
+
+# SHANNON DIVERSITY PLUS MODEL OUTPUT 
+sh_seq <- seq(min(all_metrics$shannon_diversity_tree, na.rm = TRUE),
+              max(all_metrics$shannon_diversity_tree, na.rm = TRUE),
+              length.out = 100)
+# Create data frame with unscaled values
+new_df_sh <- data.frame(
+  shannon_diversity_tree = sh_seq,
+  tree_density_per_hectare = td_mean,  # fixed at mean
+  mean_height_transect = mh_mean       # fixed at mean
+)
+# Scale the values (same method used in your scaled_data)
+new_df_scaled_sh <- data.frame(
+  shannon_diversity_tree = (sh_seq - sh_mean) / sh_sd,
+  tree_density_per_hectare = (td_mean - td_mean) / td_sd,  # = 0
+  mean_height_transect = (mh_mean - mh_mean) / mh_sd       # = 0
+)
+# Predict using model
+pred_sh <- predict(reduced_model_visits, newdata = new_df_scaled_sh, type = "link", se.fit = TRUE, re.form = NA)
+# Back-transform predictions (since Poisson uses log link)
+new_df_sh$fit <- exp(pred_sh$fit)
+new_df_sh$lower <- exp(pred_sh$fit - 1.96 * pred_sh$se.fit)
+new_df_sh$upper <- exp(pred_sh$fit + 1.96 * pred_sh$se.fit)
+# Plot
+sd_activity_model <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = activity_bats)) +
+  geom_ribbon(
+    data = new_df_sh,
+    aes(x = shannon_diversity_tree, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) +
+
+  geom_line(
+    data = new_df_sh,
+    aes(x = shannon_diversity_tree, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+  geom_point(alpha = 0.7, size = 1.5, color = "grey40") +
+  theme_classic() +
+labs(x=NULL, y=NULL)+
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHADE COVER
+cor_cover <- ggplot(all_metrics, aes(x = shade_cover, y = activity_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "grey40") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+# Correlation
+cor.test(all_metrics$shade_cover, all_metrics$activity_bats, method="spearman")
+
+
+# TREE HEIGHT
+cor_height <- ggplot(all_metrics, aes(x = mean_height_transect, y = activity_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "grey40") + 
+  theme_classic() + 
+  labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+# Correlation
+cor.test(all_metrics$mean_height_transect, all_metrics$activity_bats, method="spearman")
+
+
+ggsave("activitydensitymodel.png", plot = td_activity_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("activitycomplexity.png", plot = cor_comp, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("activitydiversitymodel.png", plot = sd_activity_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("activitycover.png", plot = cor_cover, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("activityheight.png", plot = cor_height, width = 1.6, height = 1.5, units = "in", dpi = 300)
+
+```
+
+2.  **Bat richness**
+
+```{r}
+# TREE DENSITY
+cor_density_richness <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = richness_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#D55E00") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# VERTICAL COMPLEXITY
+cor_comp_richness <- ggplot(all_metrics, aes(x = vertical_complexity, y = richness_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#D55E00") + 
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+
+# SHANNON DIVERSITY
+cor_div_richness <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = richness_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#D55E00") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHADE COVER
+cor_cover_richness <- ggplot(all_metrics, aes(x = shade_cover, y = richness_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#D55E00") + 
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+
+# TREE HEIGHT
+cor_height_richness <- ggplot(all_metrics, aes(x = mean_height_transect, y = richness_bats)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#D55E00") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+
+ggsave("richnessdensity.png", plot = cor_density_richness, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("richnesscomplexity.png", plot = cor_comp_richness, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("richnessdiversity.png", plot = cor_div_richness, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("richnesscover.png", plot = cor_cover_richness, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("richnessheight.png", plot = cor_height_richness, width = 1.6, height = 1.5, units = "in", dpi = 300)
+```
+
+3.  **Bat NMDS**
+
+```{r}
+# TREE DENSITY
+cor_density_nmds <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = NMDS1)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#0072B2") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# VERTICAL COMPLEXITY
+cor_comp_nmds <- ggplot(all_metrics, aes(x = vertical_complexity, y = NMDS1)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#0072B2") +  
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+
+# SHANNON DIVERSITY
+cor_div_nmds <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = NMDS1)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#0072B2") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHADE COVER
+cor_cover_nmds <- ggplot(all_metrics, aes(x = shade_cover, y = NMDS1)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#0072B2") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+
+# TREE HEIGHT WITH MODEL
+# Step 1: Extract mean and sd for tree height
+mh_mean <- mean(all_metrics$mean_height_transect, na.rm = TRUE)
+mh_sd <- sd(all_metrics$mean_height_transect, na.rm = TRUE)
+# Step 2: Create sequence of unscaled tree height values
+mh_seq <- seq(min(all_metrics$mean_height_transect, na.rm = TRUE),
+              max(all_metrics$mean_height_transect, na.rm = TRUE),
+              length.out = 100)
+# Step 3: Create data frame with unscaled values
+new_df_mh <- data.frame(
+  mean_height_transect = mh_seq,
+  distance_forest = NA,  
+  village = NA
+)
+# Step 4: Scale the height for prediction 
+new_df_scaled_mh <- data.frame(
+  mean_height_transect = (mh_seq - mh_mean) / mh_sd,
+  distance_forest = NA,
+  village = NA
+)
+# Step 5: Predict NMDS1 values on link scale (Gaussian = identity link)
+pred_nmds <- predict(reduced_model_nmds, newdata = new_df_scaled_mh, type = "link", se.fit = TRUE, re.form = NA)
+# Step 6: Add predicted fit and confidence intervals
+new_df_mh$fit <- pred_nmds$fit
+new_df_mh$lower <- pred_nmds$fit - 1.96 * pred_nmds$se.fit
+new_df_mh$upper <- pred_nmds$fit + 1.96 * pred_nmds$se.fit
+
+# Step 7: Plot using unscaled mean height and observed NMDS1 scores
+height_nmds_model <- ggplot(all_metrics, aes(x = mean_height_transect, y = NMDS1)) +
+  geom_ribbon(
+    data = new_df_mh,
+    aes(x = mean_height_transect, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) +
+
+  geom_line(
+    data = new_df_mh,
+    aes(x = mean_height_transect, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#0072B2") +
+  theme_classic() +
+  labs(x = NULL, y = NULL) +
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+ggsave("nmdsdensity.png", plot = cor_density_nmds, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("nmdscomplexity.png", plot = cor_comp_nmds, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("nmdsdiversity.png", plot = cor_div_nmds, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("nmdscover.png", plot = cor_cover_nmds, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("nmdsheightmodel.png", plot = height_nmds_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+```
+
+4.  Open bat activity
+
+```{r}
+# TREE DENSITY
+# Step 1: Extract means and sds for variables used in the model
+td_mean <- mean(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+td_sd <- sd(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+
+sh_mean <- mean(all_metrics$shannon_diversity_tree, na.rm = TRUE)
+sh_sd <- sd(all_metrics$shannon_diversity_tree, na.rm = TRUE)
+# Step 2: Sequence of unscaled tree density values
+td_seq <- seq(min(all_metrics$tree_density_per_hectare, na.rm = TRUE),
+              max(all_metrics$tree_density_per_hectare, na.rm = TRUE),
+              length.out = 100)
+# Step 3: Create a new dataframe for plotting
+new_df_td <- data.frame(
+  tree_density_per_hectare = td_seq,
+  shannon_diversity_tree = sh_mean,  # Hold at mean
+  distance_forest = NA,
+  village = NA
+)
+# Step 4: Scale for model input
+new_df_scaled_td <- data.frame(
+  tree_density_per_hectare = (td_seq - td_mean) / td_sd,
+  shannon_diversity_tree = (sh_mean - sh_mean) / sh_sd,  # = 0
+  distance_forest = NA,
+  village = NA
+)
+# Step 5: Predict (Poisson link = log), ignoring random effects
+pred_open <- predict(
+  reduced_model_visits_open,
+  newdata = new_df_scaled_td,
+  type = "link",
+  se.fit = TRUE,
+  re.form = NA
+)
+# Step 6: Back-transform predictions
+new_df_td$fit <- exp(pred_open$fit)
+new_df_td$lower <- exp(pred_open$fit - 1.96 * pred_open$se.fit)
+new_df_td$upper <- exp(pred_open$fit + 1.96 * pred_open$se.fit)
+# Step 7: Plot
+density_open_model <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = activity_open)) +
+  geom_ribbon(
+    data = new_df_td,
+    aes(x = tree_density_per_hectare, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) +
+  geom_line(
+    data = new_df_td,
+    aes(x = tree_density_per_hectare, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+  geom_point(size = 1.5, alpha = 0.9, color = "orange") +
+  theme_classic() +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+# VERTICAL COMPLEXITY
+cor_comp_open <- ggplot(all_metrics, aes(x = vertical_complexity, y = activity_open)) +
+  geom_point(size = 1.5, alpha = 0.9, color = "orange") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHANNON DIVERSITY
+shannon_open_model <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = activity_open)) +
+  geom_ribbon(
+    data = new_df_sh,
+    aes(x = shannon_diversity_tree, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) +
+  geom_line(
+    data = new_df_sh,
+    aes(x = shannon_diversity_tree, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+  geom_point(size = 1.5, alpha = 0.9, color = "orange") +
+  theme_classic() +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+
+# SHADE COVER
+cor_cover_open <- ggplot(all_metrics, aes(x = shade_cover, y = activity_open)) +
+  geom_point(size = 1.5, alpha = 0.9, color = "orange") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# TREE HEIGHT
+cor_height_open <- ggplot(all_metrics, aes(x = mean_height_transect, y = activity_open)) +
+  geom_point(size = 1.5, alpha = 0.9, color = "orange") +  
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+ggsave("openmodeldensity.png", plot = density_open_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("opencomplexity.png", plot = cor_comp_open, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("openmodeldiversity.png", plot = shannon_open_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("opencover.png", plot = cor_cover_open, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("openheight.png", plot = cor_height_open, width = 1.6, height = 1.5, units = "in", dpi = 300)
+```
+
+5.  Edge bat activity
+
+```{r}
+# TREE DENSITY
+# Step 1: Extract mean and SD for both predictors
+td_mean <- mean(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+td_sd <- sd(all_metrics$tree_density_per_hectare, na.rm = TRUE)
+vc_mean <- mean(all_metrics$vertical_complexity, na.rm = TRUE)
+vc_sd <- sd(all_metrics$vertical_complexity, na.rm = TRUE)
+# Step 2: Sequence of unscaled tree density values
+td_seq <- seq(
+  min(all_metrics$tree_density_per_hectare, na.rm = TRUE),
+  max(all_metrics$tree_density_per_hectare, na.rm = TRUE),
+  length.out = 100
+)
+# Step 3: Create a new dataframe for prediction (unscaled)
+new_df_td <- data.frame(
+  tree_density_per_hectare = td_seq,
+  vertical_complexity = vc_mean,
+  distance_forest = NA,
+  village = NA
+)
+# Step 4: Scale the variables to match model input
+new_df_scaled_td <- data.frame(
+  tree_density_per_hectare = (td_seq - td_mean) / td_sd,
+  vertical_complexity = (vc_mean - vc_mean) / vc_sd,  # = 0
+  distance_forest = NA,
+  village = NA
+)
+# Step 5: Predict using the model (on the link scale), ignore random effects
+pred_td <- predict(
+  reduced_model_visits_edge,
+  newdata = new_df_scaled_td,
+  type = "link",
+  se.fit = TRUE,
+  re.form = NA
+)
+# Step 6: Add predictions to original (unscaled) dataframe
+new_df_td$fit <- exp(pred_td$fit)
+new_df_td$lower <- exp(pred_td$fit - 1.96 * pred_td$se.fit)
+new_df_td$upper <- exp(pred_td$fit + 1.96 * pred_td$se.fit)
+# Step 7: Plot
+density_edge_model <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = activity_edge)) +
+  geom_ribbon(
+    data = new_df_td,
+    aes(x = tree_density_per_hectare, ymin = lower, ymax = upper),
+    fill = "grey60", alpha = 0.5, inherit.aes = FALSE
+  ) +
+  geom_line(
+    data = new_df_td,
+    aes(x = tree_density_per_hectare, y = fit),
+    color = "grey20", size = 1, inherit.aes = FALSE
+  ) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#CC79A7") +
+  theme_classic() +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7),
+    axis.title.x = element_text(margin = margin(t = 11)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+
+# VERTICAL COMPLEXITY
+cor_comp_edge <- ggplot(all_metrics, aes(x = vertical_complexity, y = activity_edge)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#CC79A7") +
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHANNON DIVERSITY
+cor_div_edge <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = activity_edge)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#CC79A7") +  
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHADE COVER
+cor_cover_edge <- ggplot(all_metrics, aes(x = shade_cover, y = activity_edge)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#CC79A7") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# TREE HEIGHT
+cor_height_edge <- ggplot(all_metrics, aes(x = mean_height_transect, y = activity_edge)) +
+  geom_point(size = 1.5, alpha = 0.7, color = "#CC79A7") + 
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)), 
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+ggsave("edgemodeldensity.png", plot = density_edge_model, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("edgecomplexity.png", plot = cor_comp_edge, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("edgediversity.png", plot = cor_div_edge, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("edgecover.png", plot = cor_cover_edge, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("edgeheight.png", plot = cor_height_edge, width = 1.6, height = 1.5, units = "in", dpi = 300)
+```
+
+6.  Clutter bat activity
+
+```{r}
+# TREE DENSITY
+cor_density_clutter <- ggplot(all_metrics, aes(x = tree_density_per_hectare, y = activity_clutter)) +
+  geom_point(size = 1.5, alpha = 1, color = "skyblue") + 
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# VERTICAL COMPLEXITY
+cor_comp_clutter <- ggplot(all_metrics, aes(x = vertical_complexity, y = activity_clutter)) +
+  geom_point(size = 1.5, alpha = 1, color = "skyblue") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHANNON DIVERSITY
+cor_div_clutter <- ggplot(all_metrics, aes(x = shannon_diversity_tree, y = activity_clutter)) +
+  geom_point(size = 1.5, alpha = 1, color = "skyblue") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# SHADE COVER
+cor_cover_clutter <- ggplot(all_metrics, aes(x = shade_cover, y = activity_clutter)) +
+  geom_point(size = 1.5, alpha = 1, color = "skyblue") +  
+  theme_classic() + 
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+# TREE HEIGHT
+cor_height_clutter <- ggplot(all_metrics, aes(x = mean_height_transect, y = activity_clutter)) +
+  geom_point(size = 1.5, alpha = 1, color = "skyblue") +  
+  theme_classic() +  
+labs(x=NULL, y=NULL)+
+  theme(axis.title = element_text(size = 7, face = "bold"),
+    axis.text = element_text(size = 7), 
+axis.title.x = element_text(margin = margin(t = 11)),  
+    axis.title.y = element_text(margin = margin(r = 10)))
+
+
+ggsave("clutterdensity.png", plot = cor_density_clutter, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("cluttercomplexity.png", plot = cor_comp_clutter, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("clutterdiversity.png", plot = cor_div_clutter, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("cluttercover.png", plot = cor_cover_clutter, width = 1.6, height = 1.5, units = "in", dpi = 300)
+ggsave("clutterheight.png", plot = cor_height_clutter, width = 1.6, height = 1.5, units = "in", dpi = 300)
+```
+
+### 4. NMDS plot
+
+1.  Simple plot of farms sized by average shade tree height per farm
+
+```{r}
+# Export the data to plot the figure in ggplot2
+# Extract NMDS scores (X and Y coordinates)
+data.scores = as.data.frame(scores(nmds)$sites)
+species.scores = as.data.frame(scores(nmds, "species"))
+species.scores$species = rownames(species.scores)
+
+# Add columns to data frame
+data.scores$farm_id = sonotype_counts$farm_id
+data.scores$tree_density_per_hectare = all_metrics$tree_density_per_hectare
+data.scores$mean_height_transect = all_metrics$mean_height_transect
+head(data.scores)
+
+# Plot of farms in NMDS space, sized by the avereg shade tree height per farm
+nmds_farms <- ggplot(data.scores, aes(x=NMDS1, y = NMDS2))+
+geom_point(data = data.scores, aes(size = log(mean_height_transect)), 
+             color = "black", alpha = 0.6) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey60") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey60") +
+    scale_size_continuous(range = c(0.8, 19)) +  
+theme(
+  legend.position="none",  
+axis.title.x = element_text(size = 16, face = "bold", colour = "black", 
+                                margin = margin(t = 12)),  
+    axis.title.y = element_text(size = 16, face = "bold", colour = "black", 
+                                margin = margin(r = 12)),                              
+panel.background = element_blank(), 
+    panel.border = element_rect(fill = NA, colour = "black"), 
+    axis.ticks = element_line(colour = "black"), 
+    axis.text = element_text(colour = "black", size=15),
+    legend.key = element_blank(), 
+    legend.title = element_text(size = 10, face = "bold", colour = "black"), 
+    legend.text = element_text(size = 11, colour = "black"),
+  aspect.ratio = 0.9
+  )
+
+ggsave("nmds_farms.png", plot = nmds_farms, width = 9, height = 7, units = "in", dpi = 300)
+```
+
+2.  Adding environmental variables onto the plot
+
+```{r}
+# Data frame with only environmental variables 
+env = sonotype_counts[,2:6]
+
+# Run the envfit function with environmental data frame, env
+en = envfit(nmds, env, permutations = 9999, na.rm = TRUE)
+# Extracting the info from envfit 
+en_coord_cont <- as.data.frame(scores(en, "vectors")) * ordiArrowMul(en)
+```
+
+3.  Finding hull around guilds
+
+```{r}
+# Assigning species to guilds 
+guild_list <- c("QCF_10_19_MO" = "Open", 
+                "QCF_20_29_M" = "Open", 
+                "QCF_20_29_E" = "Open", 
+                "QCF_FM_20_30_M" = "Open",
+                "QCF_30_40_M" = "Open",
+                "QCF_30_40_E" = "Open", 
+                "FMQCF_40_44_V" = "Edge", 
+                "FMQCF_50_59_V" = "Edge",
+                "FMQCF_60_69_V" = "Clutter",
+                "FM_20_40_V" = "Open",
+                "FM_40_45_VM" = "Edge",
+                "FM_45_60_V" = "Clutter",
+                "FM_60_90_V" = "Clutter",
+                "CF_FM_45_60_H" = "Edge",
+                "CF_FM_61_70_H" = "Edge",
+                "FM_CF_61_70_R" = "Clutter",
+                "CF_FM_90_110_H" = "Clutter",
+                "CF_FM_110_130_H" = "Clutter",
+                "CF_FM_130_140_H" = "Clutter",
+                "FM_25_50_N" = "Edge",
+                "FM_51_75_N" = "Edge",
+                "QFM_25_35_R" = "Open")
+
+sonotype_letters <- c("QCF_10_19_MO" = "A", 
+                "QCF_20_29_M" = "B", 
+                "QCF_20_29_E" = "C", 
+                "QCF_FM_20_30_M" = "G",
+                "QCF_30_40_M" = "H",
+                "QCF_30_40_E" = "I", 
+                "FMQCF_40_44_V" = "K", 
+                "FMQCF_50_59_V" = "O",
+                "FMQCF_60_69_V" = "R",
+                "FM_20_40_V" = "E",
+                "FM_40_45_VM" = "J",
+                "FM_45_60_V" = "L",
+                "FM_60_90_V" = "S",
+                "CF_FM_45_60_H" = "M",
+                "CF_FM_61_70_H" = "Q",
+                "FM_CF_61_70_R" = "P",
+                "CF_FM_90_110_H" = "T",
+                "CF_FM_110_130_H" = "U",
+                "CF_FM_130_140_H" = "V",
+                "FM_25_50_N" = "F",
+                "FM_51_75_N" = "N",
+                "QFM_25_35_R" = "D")
+
+# Making a column of guilds 
+species.scores$guilds <- guild_list[species.scores$species]
+species.scores$species_letter <- sonotype_letters[species.scores$species]
+# Adding tree density to data.scores 
+data.scores <- merge(data.scores, all_metrics[, c("farm_id", "tree_density_per_hectare")], by = "farm_id", all.x = TRUE)
+
+# Adding guilds to species.scores
+Open <- species.scores[species.scores$guilds == "Open",][chull(species.scores[species.scores$guilds == "Open", c("NMDS1", "NMDS2")]),]
+Edge <- species.scores[species.scores$guilds == "Edge",][chull(species.scores[species.scores$guilds == "Edge", c("NMDS1", "NMDS2")]),]
+Clutter <- species.scores[species.scores$guilds == "Clutter",][chull(species.scores[species.scores$guilds == "Clutter", c("NMDS1", "NMDS2")]),]
+
+hull.data <- rbind(Open, Edge, Clutter) 
+hull.data
+```
+
+4.  Plot with hulls surrounding the sonotypes in each guild
+
+```{r}
+# NMDS plot with guild hulls displayed  
+nmds_plot <- ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
+  geom_polygon(data = hull.data, aes(x = NMDS1, y = NMDS2, fill = guilds, group = guilds), alpha = 0.40) +
+  geom_text(data = species.scores, aes(x = NMDS1, y = NMDS2, label = species_letter, colour=guilds), alpha = 1, size=6.4, fontface="bold") +
+  
+  geom_segment(aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
+               data = en_coord_cont, size = 1, alpha = 0.5, colour = "grey30") +
+  
+  geom_text(data = en_coord_cont, aes(x = NMDS1 * 1.05, y = NMDS2 * 1.05), colour = "black", size=5.5, 
+            fontface = "bold", label = case_when(
+              row.names(en_coord_cont) == "tree_density_per_hectare" ~ "Shade tree density",
+              row.names(en_coord_cont) == "shade_cover" ~ "Shade Cover",
+              row.names(en_coord_cont) == "mean_height_transect" ~ "Shade tree height",
+              row.names(en_coord_cont) == "shannon_diversity_tree" ~ "Shannon diversity",
+              row.names(en_coord_cont) == "vertical_complexity" ~ "Vertical complexity")) +
+  
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey70") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey70") +
+
+    scale_x_continuous(name = "NMDS1", limits = c(-2.4, 1.01)) +
+  scale_y_continuous(name = "NMDS2") +
+  
+  scale_size_continuous(name = "Tree Density", range = c(0.5, 5.5)) +  # Adjust size range
+  scale_fill_manual(name = "Guild", values = c("Open" = "orange", "Edge" = "#CC79A7", "Clutter" = "deepskyblue")) +
+  scale_colour_manual(name="Guild", values = c("Open" = "darkorange", "Edge" = "#CC79A7", "Clutter" = "deepskyblue2"))+
+    guides(colour = "none") +
+theme(
+  axis.title.x = element_text(size = 18, face = "bold", colour = "black", 
+                              margin = margin(t = 12)),
+  axis.title.y = element_text(size = 18, face = "bold", colour = "black", 
+                              margin = margin(r = 12)),                              
+  panel.background = element_blank(), 
+  panel.border = element_rect(fill = NA, colour = "black"), 
+  axis.ticks = element_line(colour = "black"), 
+  axis.text = element_text(colour = "black", size=17),
+  legend.key = element_blank(), 
+  legend.title = element_text(size = 18, face = "bold", colour = "black"), 
+  legend.text = element_text(size = 17, colour = "black"),
+  legend.position = "inside",
+  legend.position.inside = c(0.969, 0.03),
+  legend.justification = c("right", "bottom"),
+  legend.background = element_rect(fill = "white", colour = "black"),
+  aspect.ratio = 0.9)
+
+ggsave("nmds_plot.png", plot = nmds_plot, width=12, height=10, dpi = 300)
+```
