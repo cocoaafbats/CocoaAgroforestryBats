@@ -1,5 +1,5 @@
 ---
-title: "4YP: Investigating bat diversity in Ghanian cocoa agroforestry"
+title: "Statistical analysis for thesis: The effect of agroforest structure on bat composition and activity in Ghanian Cocoa farms"
 output:
   pdf_document: default
   html_document: default
